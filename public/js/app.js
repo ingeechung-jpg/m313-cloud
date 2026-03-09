@@ -298,10 +298,10 @@
 
   /* ── STATE ── */
   var _sections = {
-    courses:     { active:[], all:[], showingAll:false, listId:'course-list',      buttonId:'view-all-btn',             emptyText:'No courses found.' },
-    exhibitions: { active:[], all:[], showingAll:false, listId:'exhibitions-list', buttonId:'view-all-exhibitions-btn', emptyText:'No exhibitions found.' },
-    projects:    { active:[], all:[], showingAll:false, listId:'projects-list',    buttonId:'view-all-projects-btn',    emptyText:'No projects found.' },
-    notes:       { active:[], all:[], showingAll:false, listId:'notes-list',       buttonId:'view-all-notes-btn',       emptyText:'No notes found.' }
+    courses:     { active:[], all:[], allLoaded:false, loadingAll:false, showingAll:false, listId:'course-list',      buttonId:'view-all-btn',             emptyText:'No courses found.' },
+    exhibitions: { active:[], all:[], allLoaded:false, loadingAll:false, showingAll:false, listId:'exhibitions-list', buttonId:'view-all-exhibitions-btn', emptyText:'No exhibitions found.' },
+    projects:    { active:[], all:[], allLoaded:false, loadingAll:false, showingAll:false, listId:'projects-list',    buttonId:'view-all-projects-btn',    emptyText:'No projects found.' },
+    notes:       { active:[], all:[], allLoaded:false, loadingAll:false, showingAll:false, listId:'notes-list',       buttonId:'view-all-notes-btn',       emptyText:'No notes found.' }
   };
   var _driveModalState = { sectionKey:'', itemKey:'', title:'', requiresPassword:true };
   var _filters = { query:'', year:'all', section:'all' };
@@ -845,10 +845,39 @@
   function toggleSection(sectionKey) {
     var section = _sections[sectionKey];
     if (!section) return;
-    section.showingAll = !section.showingAll;
-    applyFiltersAndRenderAll();
     var btn = document.getElementById(section.buttonId);
-    if (btn) btn.textContent = section.showingAll ? 'Close' : 'View All';
+    if (section.showingAll) {
+      section.showingAll = false;
+      applyFiltersAndRenderAll();
+      if (btn) btn.textContent = 'View All';
+      return;
+    }
+
+    if (section.allLoaded) {
+      section.showingAll = true;
+      applyFiltersAndRenderAll();
+      if (btn) btn.textContent = 'Close';
+      return;
+    }
+
+    section.loadingAll = true;
+    if (btn) btn.textContent = 'Loading...';
+    callBackend('getSectionItems', [sectionKey], function(res) {
+        section.loadingAll = false;
+        if (!res || !res.ok || !Array.isArray(res.items)) {
+          if (btn) btn.textContent = 'View All';
+          return;
+        }
+        section.all = res.items;
+        section.allLoaded = true;
+        section.showingAll = true;
+        buildYearFilterOptions();
+        applyFiltersAndRenderAll();
+        if (btn) btn.textContent = 'Close';
+      }, function() {
+        section.loadingAll = false;
+        if (btn) btn.textContent = 'View All';
+      });
   }
 
   function toggleViewAll() { toggleSection('courses'); }
@@ -865,7 +894,7 @@
 
   function getBaseList(sectionKey) {
     var s = _sections[sectionKey];
-    return s ? (s.showingAll ? s.all : s.active) : [];
+    return s ? (s.showingAll && s.allLoaded ? s.all : s.active) : [];
   }
 
   function matchesFilter(item, sectionKey) {
@@ -883,12 +912,17 @@
     });
   }
 
-  function buildYearFilterOptions(data) {
+  function buildYearFilterOptions() {
     var yearSelect = document.getElementById('filter-year');
     if (!yearSelect) return;
     var seen = {};
-    [].concat(data.allCourses||[], data.allExhibitions||[], data.allProjects||[], data.allNotes||[]).forEach(function(item) {
-      var y = String(item.year||'').trim(); if (y) seen[y] = true;
+    Object.keys(_sections).forEach(function(key) {
+      var section = _sections[key];
+      var list = section.allLoaded ? section.all : section.active;
+      list.forEach(function(item) {
+        var y = String(item.year || '').trim();
+        if (y) seen[y] = true;
+      });
     });
     var years = Object.keys(seen).sort(function(a,b) { return b.localeCompare(a, undefined, {numeric:true, sensitivity:'base'}); });
     yearSelect.innerHTML = '<option value="all">All Years</option>' +
@@ -1003,15 +1037,17 @@
     if (!data || data.error) { showDashboardError(data ? data.error : 'Error'); return; }
     renderProfile(data);
     _sections.courses.active     = data.courses        || [];
-    _sections.courses.all        = data.allCourses     || [];
     _sections.exhibitions.active = data.exhibitions    || [];
-    _sections.exhibitions.all    = data.allExhibitions || [];
     _sections.projects.active    = data.projects       || [];
-    _sections.projects.all       = data.allProjects    || [];
     _sections.notes.active       = data.notes          || [];
-    _sections.notes.all          = data.allNotes       || [];
+    Object.keys(_sections).forEach(function(key) {
+      _sections[key].all = [];
+      _sections[key].allLoaded = false;
+      _sections[key].loadingAll = false;
+      _sections[key].showingAll = false;
+    });
     applySectionOrder(data.sectionOrder || ['courses','exhibitions','projects','notes']);
-    buildYearFilterOptions(data);
+    buildYearFilterOptions();
     applyFiltersAndRenderAll();
     ['view-all-btn','view-all-exhibitions-btn','view-all-projects-btn','view-all-notes-btn'].forEach(function(id) {
       var btn = document.getElementById(id); if (btn) btn.textContent = 'View All';
