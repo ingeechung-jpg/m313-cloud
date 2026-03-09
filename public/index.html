@@ -110,16 +110,17 @@
     </div>
     <div class="drive-modal__body">
       <p class="drive-modal__desc" id="drive-modal-desc">비밀번호를 입력하면 Google Drive 링크로 이동합니다.</p>
-      <input
-        id="drive-modal-password"
-        class="drive-modal__input"
-        type="password"
-        placeholder="비밀번호 입력"
-        autocomplete="off"
-        onkeydown="onDrivePasswordKeydown(event)"
-      >
+      <form id="drive-modal-form" onsubmit="submitDrivePassword(event)">
+        <input
+          id="drive-modal-password"
+          class="drive-modal__input"
+          type="password"
+          placeholder="비밀번호 입력"
+          autocomplete="off"
+        >
+      </form>
       <p class="drive-modal__error" id="drive-modal-error"></p>
-      <button class="drive-modal__btn" id="drive-modal-submit" onclick="submitDrivePassword()">↗ Open in Drive</button>
+      <button class="drive-modal__btn" id="drive-modal-submit" onclick="submitDrivePassword(event)">↗ Open in Drive</button>
     </div>
   </div>
 </div>

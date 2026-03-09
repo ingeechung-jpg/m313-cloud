@@ -970,11 +970,8 @@
     if (e.target === document.getElementById('drive-modal-backdrop')) closeDriveModal();
   }
 
-  function onDrivePasswordKeydown(e) {
-    if (_driveModalState.requiresPassword && e.key === 'Enter') { e.preventDefault(); submitDrivePassword(); }
-  }
-
-  function submitDrivePassword() {
+  function submitDrivePassword(e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
     if (!_driveModalState.sectionKey || !_driveModalState.itemKey) return;
     var pwEl  = document.getElementById('drive-modal-password');
     var subEl = document.getElementById('drive-modal-submit');
