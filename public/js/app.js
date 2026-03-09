@@ -298,10 +298,10 @@
 
   /* ── STATE ── */
   var _sections = {
-    courses:     { active:[], all:[], allLoaded:false, loadingAll:false, showingAll:false, listId:'course-list',      buttonId:'view-all-btn',             emptyText:'No courses found.' },
-    exhibitions: { active:[], all:[], allLoaded:false, loadingAll:false, showingAll:false, listId:'exhibitions-list', buttonId:'view-all-exhibitions-btn', emptyText:'No exhibitions found.' },
-    projects:    { active:[], all:[], allLoaded:false, loadingAll:false, showingAll:false, listId:'projects-list',    buttonId:'view-all-projects-btn',    emptyText:'No projects found.' },
-    notes:       { active:[], all:[], allLoaded:false, loadingAll:false, showingAll:false, listId:'notes-list',       buttonId:'view-all-notes-btn',       emptyText:'No notes found.' }
+    courses:     { active:[], all:[], allLoaded:false, loadingAll:false, pendingOpen:false, showingAll:false, listId:'course-list',      buttonId:'view-all-btn',             emptyText:'No courses found.' },
+    exhibitions: { active:[], all:[], allLoaded:false, loadingAll:false, pendingOpen:false, showingAll:false, listId:'exhibitions-list', buttonId:'view-all-exhibitions-btn', emptyText:'No exhibitions found.' },
+    projects:    { active:[], all:[], allLoaded:false, loadingAll:false, pendingOpen:false, showingAll:false, listId:'projects-list',    buttonId:'view-all-projects-btn',    emptyText:'No projects found.' },
+    notes:       { active:[], all:[], allLoaded:false, loadingAll:false, pendingOpen:false, showingAll:false, listId:'notes-list',       buttonId:'view-all-notes-btn',       emptyText:'No notes found.' }
   };
   var _driveModalState = { sectionKey:'', itemKey:'', title:'', requiresPassword:true };
   var _filters = { query:'', year:'all', section:'all' };
@@ -842,6 +842,49 @@
     }).join('');
   }
 
+  function preloadSectionItems(sectionKey, onComplete) {
+    var section = _sections[sectionKey];
+    if (!section) { if (onComplete) onComplete(false); return; }
+    if (section.allLoaded) { if (onComplete) onComplete(true); return; }
+    if (section.loadingAll) return;
+
+    section.loadingAll = true;
+    callBackend('getSectionItems', [sectionKey], function(res) {
+        section.loadingAll = false;
+        if (!res || !res.ok || !Array.isArray(res.items)) {
+          if (onComplete) onComplete(false);
+          return;
+        }
+        section.all = res.items;
+        section.allLoaded = true;
+        buildYearFilterOptions();
+        if (section.pendingOpen) {
+          section.pendingOpen = false;
+          section.showingAll = true;
+          applyFiltersAndRenderAll();
+          var pendingBtn = document.getElementById(section.buttonId);
+          if (pendingBtn) pendingBtn.textContent = 'Close';
+        }
+        if (onComplete) onComplete(true);
+      }, function() {
+        section.loadingAll = false;
+        if (onComplete) onComplete(false);
+      });
+  }
+
+  function scheduleAllSectionsPreload() {
+    var keys = ['courses', 'exhibitions', 'projects', 'notes'];
+    function run(index) {
+      if (index >= keys.length) return;
+      preloadSectionItems(keys[index], function() {
+        window.setTimeout(function() { run(index + 1); }, 80);
+      });
+    }
+    var kickoff = function() { run(0); };
+    if ('requestIdleCallback' in window) window.requestIdleCallback(kickoff, { timeout: 800 });
+    else window.setTimeout(kickoff, 250);
+  }
+
   function toggleSection(sectionKey) {
     var section = _sections[sectionKey];
     if (!section) return;
@@ -860,24 +903,18 @@
       return;
     }
 
-    section.loadingAll = true;
+    section.pendingOpen = true;
+    if (section.loadingAll) {
+      if (btn) btn.textContent = 'Loading...';
+      return;
+    }
     if (btn) btn.textContent = 'Loading...';
-    callBackend('getSectionItems', [sectionKey], function(res) {
-        section.loadingAll = false;
-        if (!res || !res.ok || !Array.isArray(res.items)) {
-          if (btn) btn.textContent = 'View All';
-          return;
-        }
-        section.all = res.items;
-        section.allLoaded = true;
-        section.showingAll = true;
-        buildYearFilterOptions();
-        applyFiltersAndRenderAll();
-        if (btn) btn.textContent = 'Close';
-      }, function() {
-        section.loadingAll = false;
+    preloadSectionItems(sectionKey, function(ok) {
+      if (!ok) {
+        section.pendingOpen = false;
         if (btn) btn.textContent = 'View All';
-      });
+      }
+    });
   }
 
   function toggleViewAll() { toggleSection('courses'); }
@@ -1044,6 +1081,7 @@
       _sections[key].all = [];
       _sections[key].allLoaded = false;
       _sections[key].loadingAll = false;
+      _sections[key].pendingOpen = false;
       _sections[key].showingAll = false;
     });
     applySectionOrder(data.sectionOrder || ['courses','exhibitions','projects','notes']);
@@ -1052,6 +1090,7 @@
     ['view-all-btn','view-all-exhibitions-btn','view-all-projects-btn','view-all-notes-btn'].forEach(function(id) {
       var btn = document.getElementById(id); if (btn) btn.textContent = 'View All';
     });
+    scheduleAllSectionsPreload();
   }
 
   /* ── COURSE ROW CLICK ── */
