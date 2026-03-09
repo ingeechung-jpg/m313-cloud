@@ -1,0 +1,12 @@
+{
+  "name": "ingeechung-cloud-site",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "HOME=./.wrangler-home XDG_CONFIG_HOME=./.wrangler-home wrangler pages dev public",
+    "deploy": "HOME=./.wrangler-home XDG_CONFIG_HOME=./.wrangler-home wrangler pages deploy public"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

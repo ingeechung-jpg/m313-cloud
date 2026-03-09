@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IngeeChung</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+<canvas id="gradient-canvas" data-js-darken-top data-transition-in aria-hidden="true"></canvas>
+<div class="wrap">
+
+  <div class="profile">
+    <div class="row profile__top">
+      <h1 id="p-name" class="profile__name">LOADING</h1>
+      <div class="filter-bar" id="filter-bar">
+        <input id="filter-query" class="filter-bar__input" type="text" placeholder="Search title, code, location" autocomplete="off">
+        <select id="filter-section" class="filter-bar__select" aria-label="Filter by section">
+          <option value="all">All Sections</option>
+          <option value="courses">Courses</option>
+          <option value="exhibitions">Exhibitions</option>
+          <option value="projects">Projects</option>
+          <option value="notes">Notes</option>
+        </select>
+        <select id="filter-year" class="filter-bar__select" aria-label="Filter by year">
+          <option value="all">All Years</option>
+        </select>
+        <button id="filter-reset" class="filter-bar__reset" type="button">Reset</button>
+      </div>
+    </div>
+    <hr class="profile__divider">
+    <div class="row profile__meta-row">
+      <span class="profile__label">Email</span>
+      <span class="profile__value meta-loading" id="p-email">—</span>
+    </div>
+    <div class="row profile__meta-row" id="meta-instagram" style="display:none">
+      <span class="profile__label">Instagram</span>
+      <span class="profile__value" id="p-instagram"></span>
+    </div>
+    <div class="row profile__meta-row" id="meta-website" style="display:none">
+      <span class="profile__label">Website</span>
+      <span class="profile__value" id="p-website"></span>
+    </div>
+  </div>
+
+  <div id="dynamic-sections">
+    <div class="section--courses" id="section-courses">
+      <div class="section-header">
+        <span class="section-header__title">Teaching</span>
+        <button class="section-header__btn" id="view-all-btn" onclick="toggleViewAll()">View All</button>
+      </div>
+      <div id="course-list">
+        <p class="state-msg">Scanning spreadsheet...</p>
+      </div>
+    </div>
+
+    <div class="section--list" id="section-exhibitions">
+      <div class="section-header">
+        <span class="section-header__title">Exhibitions</span>
+        <button class="section-header__btn" id="view-all-exhibitions-btn" onclick="toggleSection('exhibitions')">View All</button>
+      </div>
+      <div id="exhibitions-list">
+        <p class="state-msg">Scanning spreadsheet...</p>
+      </div>
+    </div>
+
+    <div class="section--list" id="section-projects">
+      <div class="section-header">
+        <span class="section-header__title">Projects</span>
+        <button class="section-header__btn" id="view-all-projects-btn" onclick="toggleSection('projects')">View All</button>
+      </div>
+      <div id="projects-list">
+        <p class="state-msg">Scanning spreadsheet...</p>
+      </div>
+    </div>
+
+    <div class="section--list" id="section-notes">
+      <div class="section-header">
+        <span class="section-header__title">Note</span>
+        <button class="section-header__btn" id="view-all-notes-btn" onclick="toggleSection('notes')">View All</button>
+      </div>
+      <div id="notes-list">
+        <p class="state-msg">Scanning spreadsheet...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://calendar.google.com/calendar/scheduling-button-script.js" async></script>
+  <script>
+  (function() {
+    var target = document.currentScript;
+    window.addEventListener('load', function() {
+      calendar.schedulingButton.load({
+        url: 'https://calendar.google.com/calendar/appointments/schedules/AcZssZ19PZVwfwSKdPZJrUVbZj5dnzOFtkyoWABLjMWkptWDJfP8Tu0MV14rVKbFMnpwPruebBz7zS_a?gv=true',
+        color: '#616161',
+        label: '일정 예약',
+        target: target,
+      });
+    });
+  })();
+  </script>
+</div>
+
+<div class="drive-modal-backdrop" id="drive-modal-backdrop" onclick="onDriveBackdropClick(event)">
+  <div class="drive-modal">
+    <div class="drive-modal__header">
+      <span class="drive-modal__title" id="drive-modal-title">—</span>
+      <button class="drive-modal__close" onclick="closeDriveModal()">✕</button>
+    </div>
+    <div class="drive-modal__body">
+      <p class="drive-modal__desc" id="drive-modal-desc">비밀번호를 입력하면 Google Drive 링크로 이동합니다.</p>
+      <input
+        id="drive-modal-password"
+        class="drive-modal__input"
+        type="password"
+        placeholder="비밀번호 입력"
+        autocomplete="off"
+        onkeydown="onDrivePasswordKeydown(event)"
+      >
+      <p class="drive-modal__error" id="drive-modal-error"></p>
+      <button class="drive-modal__btn" id="drive-modal-submit" onclick="submitDrivePassword()">↗ Open in Drive</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.__INITIAL_DASHBOARD_DATA__ = null;
+  window.__APP_CONFIG__ = {
+    apiBase: '/api'
+  };
+</script>
+<script src="./js/app.js"></script>
+</body>
+</html>
