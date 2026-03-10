@@ -898,7 +898,7 @@
     grid-area: code;
     min-width: 0;
     max-width: 100%;
-    font-size: 1.7rem;
+    font-size: 0.7rem;
     font-weight: 500;
     color: var(--muted);
     white-space: nowrap;
