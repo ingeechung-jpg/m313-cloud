@@ -1,4 +1,4 @@
-const WEBAPP_EXEC_URL = 'https://script.google.com/macros/s/AKfycbyB7TrFvSrz4--Kxq4IwCWhUwcoZXXBx0j4-oBi2flfiAPfYCCPcyIqByhCzYi_ihii/exec?api=1';
+const WEBAPP_EXEC_URL = 'https://script.google.com/macros/s/AKfycbwtd5GBISjSza8kfXcb9Gnhce8Bp86k-50SuTUGg1cKgemFYe-JuvSlHLE3bHEM50Aa/exec?api=1';
 
 export async function onRequestPost(context) {
   try {
