@@ -285,12 +285,14 @@
     text = text.replace(/^---\s*\n[\s\S]*?\n---\s*\n/, '');
     // Normalize Drive image links
     text = text.replace(/https:\/\/drive\.usercontent\.google\.com\/download\?id=([a-zA-Z0-9_-]+)[^\s)]*/g,
-      'https://drive.google.com/uc?export=view&id=$1');
+      'https://drive.googleusercontent.com/uc?id=$1&export=view');
     text = text.replace(/https:\/\/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\/view[^\s)]*/g,
-      'https://drive.google.com/uc?export=view&id=$1');
+      'https://drive.googleusercontent.com/uc?id=$1&export=view');
+    text = text.replace(/https:\/\/drive\.google\.com\/uc\?export=view&id=([a-zA-Z0-9_-]+)[^\s)]*/g,
+      'https://drive.googleusercontent.com/uc?id=$1&export=view');
     // Escape underscores in Drive IDs to prevent emphasis parsing
-    text = text.replace(/(https:\/\/drive\.google\.com\/uc\?export=view&id=)([a-zA-Z0-9_-]+)/g,
-      function(_, p, id) { return p + id.replace(/_/g, '%5F'); });
+    text = text.replace(/(https:\/\/drive\.googleusercontent\.com\/uc\?id=)([a-zA-Z0-9_-]+)(&export=view)/g,
+      function(_, p, id, s) { return p + id.replace(/_/g, '%5F') + s; });
     return text;
   }
 
@@ -348,7 +350,7 @@
     function inlineFormat(text) {
       var t = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       t = t.replace(/!\[([^\]]*)\]\(((?:https?:\/\/|data:image\/[a-zA-Z0-9.+-]+;base64,)[^\s)]+)\)/g,
-        '<figure><img src="$2" alt="$1" loading="lazy" decoding="async"><figcaption>$1</figcaption></figure>');
+        '<figure><img src="$2" alt="$1" loading="lazy" decoding="async" referrerpolicy="no-referrer"><figcaption>$1</figcaption></figure>');
       t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
         '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
       t = t.replace(/\[\^([^\]]+)\]/g, function(_, id) {
@@ -382,7 +384,7 @@
         if (!line) continue;
         var m = line.match(/^!\[([^\]]*)\]\(((?:https?:\/\/|data:image\/[a-zA-Z0-9.+-]+;base64,)[^\s)]+)\)$/);
         if (!m) continue;
-        figures.push('<figure><img src="' + m[2] + '" alt="' + esc(m[1]) + '"><figcaption>' + esc(m[1]) + '</figcaption></figure>');
+        figures.push('<figure><img src="' + m[2] + '" alt="' + esc(m[1]) + '" loading="lazy" decoding="async" referrerpolicy="no-referrer"><figcaption>' + esc(m[1]) + '</figcaption></figure>');
       }
       if (!figures.length) return '';
       return '<div class="note-gallery note-gallery--' + mode + '">' + figures.join('') + '</div>\n';
