@@ -219,24 +219,24 @@
   .section-header__btn:hover { opacity: 0.6; }
 
   /* ── COURSE ROW ── */
-  .course-row {
-    padding: 0.875rem 0 0.8125rem;
-    border-bottom: 1px solid var(--line);
-    display: grid;
-    grid-template-columns: 17.5rem 1fr auto;
-    gap: 0.875rem;
-    align-items: start;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-  }
-  .course-row:hover { background-color: rgba(0,0,0,0.05); }
+.course-row {
+  padding: 0.875rem 0 0.8125rem;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: 17.5rem 1fr;
+  gap: 0.875rem;
+  align-items: start;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.course-row:hover { background-color: rgba(0,0,0,0.05); }
 
-  .course-row__year-title {
-    display: grid;
-    grid-template-columns: var(--date-col-width) minmax(0, 1fr);
-    gap: 1.25rem;
-    align-items: baseline;
-  }
+.course-row__year-code {
+  display: grid;
+  grid-template-columns: var(--date-col-width) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: baseline;
+}
 
   .course-row__main {
     display: flex;
@@ -281,23 +281,22 @@
     white-space: nowrap;
   }
 
-  .course-row__location {
-    flex: 1 1 auto;
-    min-width: 0;
-    font-size: 1.2rem;
-    color: var(--text);
-    font-weight: 500;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+.course-row__location {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 1.2rem;
+  color: var(--muted);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-  .course-row__action {
-    justify-self: end;
-    width: 8ch;
-    text-align: right;
-    white-space: nowrap;
-  }
+.course-row__action {
+  margin-left: auto;
+  text-align: right;
+  white-space: nowrap;
+}
 
   .course-row__link,
   .course-row__link-btn,
@@ -874,13 +873,13 @@
       align-items: baseline;
     }
 
-    .course-row__year-title,
-    .course-row__main { display: contents; }
+  .course-row__year-code,
+  .course-row__main { display: contents; }
 
-    .course-row__year { font-size: 0.9rem; grid-area: year; }
-    .course-row__title { grid-area: title; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .course-row__code { grid-area: code; white-space: nowrap; justify-self: start; }
-    .course-row__location { grid-area: location; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .course-row__year { font-size: 0.9rem; grid-area: year; }
+  .course-row__title { grid-area: code; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .course-row__code { grid-area: title; white-space: nowrap; justify-self: start; }
+  .course-row__location { grid-area: location; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .course-row__action { grid-area: action; justify-self: end; align-self: center; width: 8ch; text-align: right; }
     .course-row__link,
     .course-row__link-btn,

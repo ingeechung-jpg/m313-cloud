@@ -828,15 +828,15 @@
         : '<span class="course-row__nolink">—</span>';
       return (
         '<div class="course-row">' +
-          '<div class="course-row__year-title">' +
+          '<div class="course-row__year-code">' +
             '<span class="course-row__year">' + esc(item.year || '—') + '</span>' +
             '<span class="course-row__code"' + (!item.code ? ' style="color:#ccc"' : '') + '>' + esc(item.code || '—') + '</span>' +
           '</div>' +
           '<div class="course-row__main">' +
             '<span class="course-row__title">' + esc(item.title) + '</span>' +
             '<span class="course-row__location"' + (!item.location ? ' style="color:#ccc"' : '') + '>' + esc(item.location || '—') + '</span>' +
+            '<span class="course-row__action">' + lnk + '</span>' +
           '</div>' +
-          '<span class="course-row__action">' + lnk + '</span>' +
         '</div>'
       );
     }).join('');
