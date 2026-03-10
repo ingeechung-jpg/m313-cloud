@@ -48,7 +48,6 @@
   }
 
   var _relayoutRafId = 0;
-  var _noteImageObserver = null;
   function scheduleRelayoutOpenNoteFootnotes() {
     if (_relayoutRafId) return;
     _relayoutRafId = window.requestAnimationFrame(function() {
@@ -57,64 +56,6 @@
     });
   }
 
-  function getNoteImageObserver() {
-    if (_noteImageObserver) return _noteImageObserver;
-    if (!('IntersectionObserver' in window)) return null;
-    _noteImageObserver = new IntersectionObserver(function(entries) {
-      var grouped = {};
-      entries.forEach(function(entry) {
-        if (!entry.isIntersecting) return;
-        var img = entry.target;
-        if (!img || img.getAttribute('data-loaded') === '1' || img.getAttribute('data-loading') === '1') return;
-        var itemKey = img.getAttribute('data-note-item-key') || '';
-        var password = img.getAttribute('data-note-password') || '';
-        var idx = parseInt(img.getAttribute('data-note-img-index'), 10);
-        if (!itemKey || !idx) return;
-        var groupKey = itemKey + '::' + password;
-        if (!grouped[groupKey]) grouped[groupKey] = { itemKey: itemKey, password: password, indexes: [], byIndex: {} };
-        if (grouped[groupKey].indexes.indexOf(idx) === -1) grouped[groupKey].indexes.push(idx);
-        if (!grouped[groupKey].byIndex[idx]) grouped[groupKey].byIndex[idx] = [];
-        grouped[groupKey].byIndex[idx].push(img);
-      });
-
-      Object.keys(grouped).forEach(function(key) {
-        var g = grouped[key];
-        g.indexes.forEach(function(idx) {
-          (g.byIndex[idx] || []).forEach(function(img) { img.setAttribute('data-loading', '1'); });
-        });
-
-        callBackend('getProtectedNoteInlineImages', [g.itemKey, g.indexes, g.password || ''], function(res) {
-            var sources = (res && res.ok && res.sources) ? res.sources : {};
-            g.indexes.forEach(function(idx) {
-              var src = sources[String(idx)] || sources[idx];
-              var list = g.byIndex[idx] || [];
-              list.forEach(function(img) {
-                if (src) {
-                  img.addEventListener('load', function(e) {
-                    var el = e && e.target;
-                    if (el) {
-                      el.classList.remove('is-loading');
-                      el.setAttribute('data-loaded', '1');
-                      el.removeAttribute('data-loading');
-                    }
-                    scheduleRelayoutOpenNoteFootnotes();
-                  }, { once: true });
-                  img.src = src;
-                } else {
-                  img.removeAttribute('data-loading');
-                }
-              });
-            });
-            scheduleRelayoutOpenNoteFootnotes();
-          }, function() {
-            g.indexes.forEach(function(idx) {
-              (g.byIndex[idx] || []).forEach(function(img) { img.removeAttribute('data-loading'); });
-            });
-          });
-      });
-    }, { root: null, rootMargin: '240px 0px', threshold: 0.01 });
-    return _noteImageObserver;
-  }
 
   function initWebGLBackground() {
     var canvas = document.getElementById('gradient-canvas');
@@ -391,11 +332,6 @@
 
     function inlineFormat(text) {
       var t = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      t = t.replace(/!\[([^\]]*)\]\(noteimg:\/\/(\d+)(?:\?ar=([0-9.]+))?\)/g, function(_, alt, idx, ar) {
-        var ratio = parseFloat(ar);
-        var arStyle = (isFinite(ratio) && ratio > 0) ? (' style="--ar:' + ratio + ';"') : '';
-        return '<figure><img class="note-inline-img is-loading" data-note-img-index="' + idx + '" alt="' + alt + '" loading="lazy" decoding="async"' + arStyle + '><figcaption>' + alt + '</figcaption></figure>';
-      });
       t = t.replace(/!\[([^\]]*)\]\(((?:https?:\/\/|data:image\/[a-zA-Z0-9.+-]+;base64,)[^\s)]+)\)/g,
         '<figure><img src="$2" alt="$1" loading="lazy" decoding="async"><figcaption>$1</figcaption></figure>');
       t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
@@ -656,45 +592,6 @@
     }
   }
 
-  function hydrateInlineNoteImages(targetEl, itemKey, password) {
-    if (!targetEl) return;
-    var imgs = targetEl.querySelectorAll('img.note-inline-img[data-note-img-index]');
-    var observer = getNoteImageObserver();
-    for (var i = 0; i < imgs.length; i++) {
-      var img = imgs[i];
-      if (img.getAttribute('data-loaded') === '1' || img.getAttribute('data-loading') === '1') continue;
-      img.setAttribute('data-note-item-key', itemKey || '');
-      img.setAttribute('data-note-password', password || '');
-      if (observer) observer.observe(img);
-    }
-    if (!observer) {
-      // Fallback (no IntersectionObserver): load only first 2 images first.
-      var eager = [];
-      for (var j = 0; j < imgs.length; j++) {
-        var idx = parseInt(imgs[j].getAttribute('data-note-img-index'), 10);
-        if (idx && eager.indexOf(idx) === -1) eager.push(idx);
-        if (eager.length >= 2) break;
-      }
-      if (!eager.length) return;
-      callBackend('getProtectedNoteInlineImages', [itemKey, eager, password || ''], function(res) {
-          var sources = (res && res.ok && res.sources) ? res.sources : {};
-          for (var k = 0; k < imgs.length; k++) {
-            var n = parseInt(imgs[k].getAttribute('data-note-img-index'), 10);
-            if (!n || eager.indexOf(n) === -1) continue;
-            var src = sources[String(n)] || sources[n];
-            if (!src) continue;
-            imgs[k].addEventListener('load', function(e) {
-              var el = e && e.target;
-              if (el) el.classList.remove('is-loading');
-              scheduleRelayoutOpenNoteFootnotes();
-            }, { once: true });
-            imgs[k].src = src;
-            imgs[k].setAttribute('data-loaded', '1');
-          }
-        });
-    }
-  }
-
   function relayoutOpenNoteFootnotes() {
     var targets = document.querySelectorAll('.note-detail:not([hidden]) [data-note-content][data-note-footnotes]');
     for (var i = 0; i < targets.length; i++) {
@@ -713,7 +610,6 @@
         var rendered = markdownToHtml(res.markdown);
         targetEl.innerHTML = '<div class="note-prose">' + rendered.html + '</div>';
         targetEl.setAttribute('data-note-footnotes', JSON.stringify(rendered.footnotes || {}));
-        hydrateInlineNoteImages(targetEl, itemKey, password || '');
         layoutNoteFootnotes(targetEl, rendered.footnotes || {});
         bindNoteMediaRelayout(targetEl);
       }, function(err) {
