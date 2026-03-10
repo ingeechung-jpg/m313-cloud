@@ -228,7 +228,7 @@
   display: grid;
   grid-template-columns: var(--grid-left) 1fr;
   gap: var(--grid-gap-tight);
-  align-items: start;
+  align-items: center;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
@@ -238,18 +238,18 @@
   display: grid;
   grid-template-columns: var(--date-col-width) minmax(0, 1fr);
   gap: 1.25rem;
-  align-items: baseline;
+  align-items: center;
 }
 
   .course-row__main {
     display: grid;
     grid-template-columns: max-content minmax(0, 1fr) auto;
     gap: 1.25rem;
-    align-items: baseline;
+    align-items: center;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
+  }
 
   .course-row__year,
   .note-row__year {
@@ -871,8 +871,8 @@
       padding: 0.75rem 0;
       grid-template-columns: minmax(0, 0.6fr) minmax(0, 1fr) auto;
       grid-template-areas:
-        "year code action"
-        "title location action";
+        "year title action"
+        "code location action";
       align-items: baseline;
     }
 
@@ -881,7 +881,13 @@
 
   .course-row__year { font-size: 0.9rem; grid-area: year; }
   .course-row__title { grid-area: title; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .course-row__code { grid-area: code; white-space: nowrap; justify-self: start; }
+  .course-row__code {
+    grid-area: code;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    justify-self: start;
+  }
   .course-row__location { grid-area: location; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .course-row__action { grid-area: action; justify-self: end; align-self: center; width: 8ch; text-align: right; }
     .course-row__link,
