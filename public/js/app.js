@@ -290,9 +290,6 @@
       'https://drive.googleusercontent.com/uc?id=$1&export=view');
     text = text.replace(/https:\/\/drive\.google\.com\/uc\?export=view&id=([a-zA-Z0-9_-]+)[^\s)]*/g,
       'https://drive.googleusercontent.com/uc?id=$1&export=view');
-    // Escape underscores in Drive IDs to prevent emphasis parsing
-    text = text.replace(/(https:\/\/drive\.googleusercontent\.com\/uc\?id=)([a-zA-Z0-9_-]+)(&export=view)/g,
-      function(_, p, id, s) { return p + id.replace(/_/g, '%5F') + s; });
     return text;
   }
 
@@ -349,6 +346,23 @@
 
     function inlineFormat(text) {
       var t = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+      // Protect URLs from emphasis parsing
+      var urlMap = [];
+      t = t.replace(/https?:\/\/[^\s)]+/g, function(u) {
+        var key = '@@URL' + urlMap.length + '@@';
+        urlMap.push(u);
+        return key;
+      });
+
+      t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      t = t.replace(/__([^_]+)__/g,     '<strong>$1</strong>');
+      t = t.replace(/\*([^*]+)\*/g,     '<em>$1</em>');
+      t = t.replace(/_([^_]+)_/g,       '<em>$1</em>');
+
+      // Restore URLs
+      t = t.replace(/@@URL(\d+)@@/g, function(_, idx) { return urlMap[Number(idx)] || ''; });
+
       t = t.replace(/!\[([^\]]*)\]\(((?:https?:\/\/|data:image\/[a-zA-Z0-9.+-]+;base64,)[^\s)]+)\)/g,
         '<figure><img src="$2" alt="$1" loading="lazy" decoding="async" referrerpolicy="no-referrer"><figcaption>$1</figcaption></figure>');
       t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
@@ -370,10 +384,6 @@
         if (!safeId) return '';
         return '<sup class="note-fn-ref" data-fn-id="' + safeId + '">[' + esc(id) + ']</sup>';
       });
-      t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-      t = t.replace(/__([^_]+)__/g,     '<strong>$1</strong>');
-      t = t.replace(/\*([^*]+)\*/g,     '<em>$1</em>');
-      t = t.replace(/_([^_]+)_/g,       '<em>$1</em>');
       return t;
     }
 
