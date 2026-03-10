@@ -830,10 +830,10 @@
         '<div class="course-row">' +
           '<div class="course-row__year-title">' +
             '<span class="course-row__year">' + esc(item.year || '—') + '</span>' +
-            '<span class="course-row__title">' + esc(item.title) + '</span>' +
+            '<span class="course-row__code"' + (!item.code ? ' style="color:#ccc"' : '') + '>' + esc(item.code || '—') + '</span>' +
           '</div>' +
           '<div class="course-row__main">' +
-            '<span class="course-row__code"' + (!item.code ? ' style="color:#ccc"' : '') + '>' + esc(item.code || '—') + '</span>' +
+            '<span class="course-row__title">' + esc(item.title) + '</span>' +
             '<span class="course-row__location"' + (!item.location ? ' style="color:#ccc"' : '') + '>' + esc(item.location || '—') + '</span>' +
           '</div>' +
           '<span class="course-row__action">' + lnk + '</span>' +
@@ -934,6 +934,17 @@
     return s ? (s.showingAll && s.allLoaded ? s.all : s.active) : [];
   }
 
+  function ensureAllForFilters() {
+    var hasFilter = _filters.query || _filters.year !== 'all' || _filters.section !== 'all';
+    if (!hasFilter) return;
+    ['courses','exhibitions','projects','notes'].forEach(function(key) {
+      if (_filters.section !== 'all' && _filters.section !== key) return;
+      var section = _sections[key];
+      if (!section || section.allLoaded || section.loadingAll) return;
+      preloadSectionItems(key);
+    });
+  }
+
   function matchesFilter(item, sectionKey) {
     if (_filters.section !== 'all' && _filters.section !== sectionKey) return false;
     if (_filters.year !== 'all' && String(item.year || '') !== _filters.year) return false;
@@ -942,8 +953,11 @@
   }
 
   function applyFiltersAndRenderAll() {
+    ensureAllForFilters();
     ['courses','exhibitions','projects','notes'].forEach(function(key) {
-      var filtered = getBaseList(key).filter(function(item) { return matchesFilter(item, key); });
+      var section = _sections[key];
+      var base = section && section.allLoaded ? section.all : getBaseList(key);
+      var filtered = base.filter(function(item) { return matchesFilter(item, key); });
       var hasFilter = _filters.query || _filters.year !== 'all' || _filters.section !== 'all';
       renderSection(key, filtered, hasFilter ? 'No results found.' : null);
     });
@@ -1061,7 +1075,11 @@
           if (_driveModalState.requiresPassword) pwEl.focus();
           return;
         }
-        window.open(res.url, '_blank', 'noopener,noreferrer');
+        var win = window.open(res.url, '_blank', 'noopener,noreferrer');
+        if (!win || win.closed || typeof win.closed === 'undefined') {
+          errEl.textContent = '팝업이 차단되었습니다. 브라우저에서 팝업 허용 후 다시 시도하세요.';
+          return;
+        }
         closeDriveModal();
       }, function(err) {
         subEl.disabled = false;
