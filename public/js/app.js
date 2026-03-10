@@ -957,9 +957,11 @@
     ensureAllForFilters();
     ['courses','exhibitions','projects','notes'].forEach(function(key) {
       var section = _sections[key];
-      var base = section && section.allLoaded ? section.all : getBaseList(key);
-      var filtered = base.filter(function(item) { return matchesFilter(item, key); });
       var hasFilter = _filters.query || _filters.year !== 'all' || _filters.section !== 'all';
+      var base = hasFilter
+        ? (section && section.allLoaded ? section.all : getBaseList(key))
+        : getBaseList(key);
+      var filtered = base.filter(function(item) { return matchesFilter(item, key); });
       renderSection(key, filtered, hasFilter ? 'No results found.' : null);
     });
   }
