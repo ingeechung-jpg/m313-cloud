@@ -358,6 +358,9 @@
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .note-row__lock {
@@ -880,7 +883,7 @@
   .course-row__main { display: contents; }
 
   .course-row__year {
-    font-size: 0.7rem;
+    font-size: 0.85rem;
     font-weight: 500;
     color: var(--muted);
     grid-area: year;
@@ -888,7 +891,7 @@
   .course-row__title {
     grid-area: title;
     min-width: 0;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
@@ -898,7 +901,7 @@
     grid-area: code;
     min-width: 0;
     max-width: 100%;
-    font-size: 0.7rem;
+    font-size: 0.85rem;
     font-weight: 500;
     color: var(--muted);
     white-space: nowrap;
@@ -909,7 +912,7 @@
   .course-row__location {
     grid-area: location;
     min-width: 0;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 500;
     color: var(--muted);
     white-space: nowrap;
