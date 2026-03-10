@@ -303,7 +303,7 @@
     projects:    { active:[], all:[], allLoaded:false, loadingAll:false, pendingOpen:false, showingAll:false, listId:'projects-list',    buttonId:'view-all-projects-btn',    emptyText:'No projects found.' },
     notes:       { active:[], all:[], allLoaded:false, loadingAll:false, pendingOpen:false, showingAll:false, listId:'notes-list',       buttonId:'view-all-notes-btn',       emptyText:'No notes found.' }
   };
-  var _driveModalState = { sectionKey:'', itemKey:'', title:'', requiresPassword:true };
+  var _driveModalState = { sectionKey:'', itemKey:'', title:'', requiresPassword:true, isDrive:true };
   var _filters = { query:'', year:'all', section:'all' };
 
   /* ── PROFILE ── */
@@ -823,8 +823,9 @@
     }
 
     el.innerHTML = list.map(function(item) {
+      var lnkLabel = item.isDrive ? '↗ Drive' : '↗ Link';
       var lnk = item.hasDrive
-        ? '<button class="course-row__link-btn" type="button" data-title="' + esc(item.title) + '" data-section="' + esc(sectionKey) + '" data-item-key="' + esc(item.itemKey) + '" data-requires-password="' + (item.requiresPassword ? '1' : '0') + '" onclick="openDriveModal(this)">↗ Drive</button>'
+        ? '<button class="course-row__link-btn" type="button" data-title="' + esc(item.title) + '" data-section="' + esc(sectionKey) + '" data-item-key="' + esc(item.itemKey) + '" data-requires-password="' + (item.requiresPassword ? '1' : '0') + '" data-is-drive="' + (item.isDrive ? '1' : '0') + '" onclick="openDriveModal(this)">' + lnkLabel + '</button>'
         : '<span class="course-row__nolink">—</span>';
       return (
         '<div class="course-row">' +
@@ -1014,7 +1015,8 @@
     var sectionKey       = el.getAttribute('data-section') || '';
     var itemKey          = el.getAttribute('data-item-key') || '';
     var requiresPassword = el.getAttribute('data-requires-password') === '1';
-    _driveModalState = { sectionKey:sectionKey, itemKey:itemKey, title:title, requiresPassword:requiresPassword };
+    var isDrive          = el.getAttribute('data-is-drive') !== '0';
+    _driveModalState = { sectionKey:sectionKey, itemKey:itemKey, title:title, requiresPassword:requiresPassword, isDrive:isDrive };
 
     var descEl=document.getElementById('drive-modal-desc'),
         pwEl=document.getElementById('drive-modal-password'),
@@ -1023,20 +1025,22 @@
     document.getElementById('drive-modal-error').textContent = '';
     pwEl.value = ''; subEl.disabled = false;
 
+    var kindLabel = isDrive ? 'Drive' : 'Link';
     if (requiresPassword) {
-      descEl.textContent = '비밀번호를 입력하면 Google Drive 링크로 이동합니다.';
+      descEl.textContent = '비밀번호를 입력하면 ' + kindLabel + ' 링크로 이동합니다.';
       pwEl.style.display = '';
     } else {
-      descEl.textContent = '바로 Google Drive 링크를 엽니다.';
+      descEl.textContent = isDrive ? '바로 Google Drive 링크를 엽니다.' : '바로 링크를 엽니다.';
       pwEl.style.display = 'none';
     }
-    subEl.style.display = ''; subEl.textContent = '↗ Open in Drive';
+    subEl.style.display = '';
+    subEl.textContent = isDrive ? '↗ Open in Drive' : '↗ Open Link';
     document.getElementById('drive-modal-backdrop').classList.add('open');
     if (requiresPassword) pwEl.focus();
   }
 
   function openNoLinkModal(title) {
-    _driveModalState = { sectionKey:'', itemKey:'', title:title||'', requiresPassword:false };
+    _driveModalState = { sectionKey:'', itemKey:'', title:title||'', requiresPassword:false, isDrive:false };
     document.getElementById('drive-modal-title').textContent = title || '안내';
     document.getElementById('drive-modal-error').textContent = '';
     document.getElementById('drive-modal-desc').textContent = '유효한 링크가 없습니다.';
@@ -1048,7 +1052,7 @@
   function closeDriveModal() {
     document.getElementById('drive-modal-backdrop').classList.remove('open');
     document.getElementById('drive-modal-submit').style.display = '';
-    _driveModalState = { sectionKey:'', itemKey:'', title:'', requiresPassword:true };
+    _driveModalState = { sectionKey:'', itemKey:'', title:'', requiresPassword:true, isDrive:true };
   }
 
   function onDriveBackdropClick(e) {
