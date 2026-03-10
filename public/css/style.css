@@ -496,6 +496,14 @@
 
   .note-prose strong { font-weight: 600; }
   .note-prose em { font-style: italic; }
+  .note-prose del { color: var(--muted); }
+  .note-prose code.inline-code {
+    font-family: 'IBM Plex Mono', 'Menlo', monospace;
+    font-size: 0.95em;
+    padding: 0.1em 0.35em;
+    border-radius: 0.25rem;
+    background: rgba(0,0,0,0.06);
+  }
 
   .note-prose a {
     color: var(--text);
@@ -518,6 +526,40 @@
     border: 0;
     border-top: 1px solid var(--line);
     margin: 1.75em 0;
+  }
+
+  .note-prose .note-code {
+    font-family: 'IBM Plex Mono', 'Menlo', monospace;
+    font-size: 0.95em;
+    line-height: 1.6;
+    background: rgba(0,0,0,0.05);
+    border-radius: 0.5rem;
+    padding: 0.875rem 1rem;
+    overflow: auto;
+  }
+
+  .note-prose .note-code--mermaid {
+    background: rgba(0,0,0,0.03);
+    border: 1px dashed var(--line);
+  }
+
+  .note-prose .note-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.95em;
+  }
+
+  .note-prose .note-table th,
+  .note-prose .note-table td {
+    border-bottom: 1px solid var(--line);
+    padding: 0.5rem 0.6rem;
+    text-align: left;
+  }
+
+  .note-prose .note-table th {
+    font-weight: 600;
+    color: var(--text);
   }
 
   /* 이미지: 2단 그리드 내 오른쪽 컬럼에 꽉 차게 */

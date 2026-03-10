@@ -298,6 +298,9 @@
     var footnotes = {};
     var bodyLines = [];
     var autoFootnoteSeq = 0;
+    var inCodeBlock = false;
+    var codeLang = '';
+    var codeLines = [];
     function parseFootnoteDef(line) {
       var s = String(line || '');
       var m = s.match(/^\s*\[\^([^\]]+)\]\s*[:：]\s*(.*)$/);
@@ -344,6 +347,31 @@
       inList = false; listTag = '';
     }
 
+    function flushCodeBlock() {
+      if (!inCodeBlock) return;
+      var isMermaid = codeLang && codeLang.toLowerCase() === 'mermaid';
+      var cls = isMermaid ? 'note-code note-code--mermaid' : 'note-code';
+      var dataAttr = isMermaid ? ' data-mermaid="1"' : '';
+      html += '<pre class="' + cls + '"' + dataAttr + '><code>' + esc(codeLines.join('\n')) + '</code></pre>\n';
+      inCodeBlock = false;
+      codeLang = '';
+      codeLines = [];
+    }
+
+    function tryParseTable(startIndex) {
+      if (startIndex + 1 >= lines.length) return null;
+      var header = lines[startIndex];
+      var sep = lines[startIndex + 1];
+      if (!/^\s*\|/.test(header) || !/^\s*\|?[\s:-]+\|[\s|:-]*$/.test(sep)) return null;
+      var rows = [];
+      var i = startIndex;
+      while (i < lines.length && /^\s*\|/.test(lines[i])) {
+        rows.push(lines[i]);
+        i++;
+      }
+      return { rows: rows, next: i };
+    }
+
     function inlineFormat(text) {
       var t = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
@@ -357,6 +385,8 @@
 
       t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
       t = t.replace(/__([^_]+)__/g,     '<strong>$1</strong>');
+      t = t.replace(/~~([^~]+)~~/g,     '<del>$1</del>');
+      t = t.replace(/`([^`]+)`/g,       '<code class="inline-code">$1</code>');
       t = t.replace(/\*([^*]+)\*/g,     '<em>$1</em>');
       t = t.replace(/_([^_]+)_/g,       '<em>$1</em>');
 
@@ -407,6 +437,23 @@
       var raw = lines[i].trimEnd();
       var rawTrim = raw.trim();
 
+      var fence = rawTrim.match(/^```(\w+)?\s*$/);
+      if (fence) {
+        if (inCodeBlock) {
+          flushCodeBlock();
+        } else {
+          flushPara(); flushList();
+          inCodeBlock = true;
+          codeLang = (fence[1] || '').trim();
+          codeLines = [];
+        }
+        continue;
+      }
+      if (inCodeBlock) {
+        codeLines.push(raw);
+        continue;
+      }
+
       // gallery block start/end
       if (!galleryMode) {
         var gs = rawTrim.match(/^:::(one|two)$/i);
@@ -439,6 +486,30 @@
         flushPara(); flushList();
         var level = hMatch[1].length;
         html += '<h' + level + '>' + inlineFormat(hMatch[2]) + '</h' + level + '>\n';
+        continue;
+      }
+
+      // table
+      var table = tryParseTable(i);
+      if (table) {
+        flushPara(); flushList();
+        var rows = table.rows;
+        var headerCells = rows[0].split('|').slice(1, -1);
+        html += '<table class="note-table"><thead><tr>';
+        for (var h = 0; h < headerCells.length; h++) {
+          html += '<th>' + inlineFormat(headerCells[h].trim()) + '</th>';
+        }
+        html += '</tr></thead><tbody>';
+        for (var r = 2; r < rows.length; r++) {
+          var cells = rows[r].split('|').slice(1, -1);
+          html += '<tr>';
+          for (var c = 0; c < cells.length; c++) {
+            html += '<td>' + inlineFormat(cells[c].trim()) + '</td>';
+          }
+          html += '</tr>';
+        }
+        html += '</tbody></table>\n';
+        i = table.next - 1;
         continue;
       }
 
@@ -483,7 +554,7 @@
     }
 
     if (galleryMode) html += renderGallery(galleryMode, galleryLines);
-    flushPara(); flushList();
+    flushPara(); flushList(); flushCodeBlock();
     return { html: html, footnotes: footnotes };
   }
 
