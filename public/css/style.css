@@ -359,8 +359,14 @@
     justify-content: space-between;
     gap: 0.75rem;
     white-space: nowrap;
+    overflow: visible;
+  }
+  .note-row__title-text {
+    min-width: 0;
+    flex: 1 1 auto;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .note-row__lock {

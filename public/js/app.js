@@ -797,7 +797,7 @@
         '<div class="note-item" data-item-key="' + esc(item.itemKey) + '">' +
           '<button class="note-row" type="button" data-item-key="' + esc(item.itemKey) + '" data-requires-password="' + (item.requiresPassword ? '1' : '0') + '">' +
             '<span class="note-row__year">' + esc(item.year || '—') + '</span>' +
-            '<span class="note-row__title">' + esc(item.title) + passBadge + '</span>' +
+            '<span class="note-row__title"><span class="note-row__title-text">' + esc(item.title) + '</span>' + passBadge + '</span>' +
           '</button>' +
           '<div class="note-detail" id="note-detail-' + esc(item.itemKey) + '" hidden>' +
             '<div class="note-detail__row">' +
@@ -859,6 +859,9 @@
         section.all = res.items;
         section.allLoaded = true;
         buildYearFilterOptions();
+        if (_filters.query || _filters.year !== 'all' || _filters.section !== 'all') {
+          applyFiltersAndRenderAll();
+        }
         if (section.pendingOpen) {
           section.pendingOpen = false;
           section.showingAll = true;
@@ -892,7 +895,10 @@
     var btn = document.getElementById(section.buttonId);
     if (section.showingAll) {
       section.showingAll = false;
-      applyFiltersAndRenderAll();
+      section.pendingOpen = false;
+      var hasFilter = _filters.query || _filters.year !== 'all' || _filters.section !== 'all';
+      if (hasFilter) applyFiltersAndRenderAll();
+      else renderSection(sectionKey, section.active);
       if (btn) btn.textContent = 'View All';
       return;
     }
